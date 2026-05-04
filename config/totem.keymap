@@ -1,265 +1,118 @@
-// Port of the cosmotyl QMK default keymap to the ZMK totem.
-// Source: qmk_firmware/keyboards/handwired/cosmotyl/keymaps/default/keymap.c
+// Totem keymap — mirrors urob's zmk-config structure:
+// https://github.com/urob/zmk-config
+//
+// Layer content is a port of the cosmotyl QMK default keymap:
+// qmk_firmware/keyboards/handwired/cosmotyl/keymaps/default/keymap.c
 
 #include <behaviors.dtsi>
 #include <dt-bindings/zmk/keys.h>
 #include <dt-bindings/zmk/bt.h>
 #include <dt-bindings/zmk/outputs.h>
 
-#define BASE 0
+#include <zmk-helpers/helper.h>
+#include <zmk-helpers/key-labels/totem.h>
+
+#define DEF  0
 #define NAV  1
 #define SYM  2
 #define NUM  3
 #define FN   4
 #define HYPR 5
 
-&mt {
-    flavor = "tap-preferred";
-    tapping-term-ms = <170>;
-    quick-tap-ms = <100>;
-    require-prior-idle-ms = <120>;
-};
+#define QUICK_TAP_MS 175
 
-&lt {
-    flavor = "tap-preferred";
-    tapping-term-ms = <200>;
-    quick-tap-ms = <100>;
-};
+/* Positional homerow mods — urob parity. */
+#define MAKE_HRM(NAME, HOLD, TAP, TRIGGER_POS) \
+    ZMK_HOLD_TAP(NAME, \
+        bindings = <HOLD>, <TAP>; \
+        flavor = "balanced"; \
+        tapping-term-ms = <280>; \
+        quick-tap-ms = <QUICK_TAP_MS>; \
+        require-prior-idle-ms = <150>; \
+        hold-trigger-on-release; \
+        hold-trigger-key-positions = <TRIGGER_POS>; \
+    )
 
-/ {
-    behaviors {
-        // Shift + . = ?
-        dot_morph: dot_morph {
-            compatible = "zmk,behavior-mod-morph";
-            #binding-cells = <0>;
-            bindings = <&kp DOT>, <&kp QMARK>;
-            mods = <(MOD_LSFT|MOD_RSFT)>;
-        };
-        // Shift + , = !
-        comma_morph: comma_morph {
-            compatible = "zmk,behavior-mod-morph";
-            #binding-cells = <0>;
-            bindings = <&kp COMMA>, <&kp EXCL>;
-            mods = <(MOD_LSFT|MOD_RSFT)>;
-        };
-        // Shift + / = backslash
-        slash_morph: slash_morph {
-            compatible = "zmk,behavior-mod-morph";
-            #binding-cells = <0>;
-            bindings = <&kp FSLH>, <&kp BSLH>;
-            mods = <(MOD_LSFT|MOD_RSFT)>;
-        };
-    };
+MAKE_HRM(hml, &kp, &kp, KEYS_R THUMBS)
+MAKE_HRM(hmr, &kp, &kp, KEYS_L THUMBS)
 
-    macros {
-        // VIM_SV: ESC :w ENTER
-        vim_sv: vim_sv {
-            compatible = "zmk,behavior-macro";
-            #binding-cells = <0>;
-            bindings
-                = <&kp ESC>
-                , <&kp COLON>
-                , <&kp W>
-                , <&kp RET>
-                ;
-        };
-    };
+/* Shifted-key overrides (QMK key_overrides). */
+ZMK_MOD_MORPH(dot_morph,
+    bindings = <&kp DOT>, <&kp QMARK>;
+    mods = <(MOD_LSFT|MOD_RSFT)>;
+)
+ZMK_MOD_MORPH(comma_morph,
+    bindings = <&kp COMMA>, <&kp EXCL>;
+    mods = <(MOD_LSFT|MOD_RSFT)>;
+)
+ZMK_MOD_MORPH(slash_morph,
+    bindings = <&kp FSLH>, <&kp BSLH>;
+    mods = <(MOD_LSFT|MOD_RSFT)>;
+)
 
-    combos {
-        compatible = "zmk,combos";
+/* :w<CR> */
+ZMK_MACRO(vim_sv,
+    bindings = <&kp ESC>, <&kp COLON>, <&kp W>, <&kp RET>;
+)
 
-        // C + V -> ESC
-        combo_esc {
-            timeout-ms = <40>;
-            key-positions = <23 24>;
-            bindings = <&kp ESC>;
-            layers = <BASE>;
-        };
-        // U + I -> BSPC
-        combo_bspc {
-            timeout-ms = <40>;
-            key-positions = <6 7>;
-            bindings = <&kp BSPC>;
-            layers = <BASE>;
-        };
-        // I + O -> DEL
-        combo_del {
-            timeout-ms = <40>;
-            key-positions = <7 8>;
-            bindings = <&kp DEL>;
-            layers = <BASE>;
-        };
-        // C + , -> Caps Word
-        combo_caps_word {
-            timeout-ms = <50>;
-            key-positions = <23 28>;
-            bindings = <&caps_word>;
-            layers = <BASE>;
-        };
-        // M + , + . -> :w<CR>
-        combo_vim_sv {
-            timeout-ms = <60>;
-            key-positions = <27 28 29>;
-            bindings = <&vim_sv>;
-            layers = <BASE>;
-        };
-    };
+/* Combos — positions resolved via key-labels/totem.h.
+   Signature: ZMK_COMBO(name, bindings, key-positions, layers, timeout)
+   Bottom row: LB5=20 LB4=21(Z) LB3=22(X) LB2=23(C) LB1=24(V) LB0=25(B)
+               RB0=26(N) RB1=27(M) RB2=28(,) RB3=29(.) RB4=30(/) RB5=31 */
+ZMK_COMBO(combo_esc,     &kp ESC,     LB2 LB1,     DEF, 40)   // C + V
+ZMK_COMBO(combo_bspc,    &kp BSPC,    RT1 RT2,     DEF, 40)   // U + I
+ZMK_COMBO(combo_del,     &kp DEL,     RT2 RT3,     DEF, 40)   // I + O
+ZMK_COMBO(combo_caps,    &caps_word,  LB2 RB2,     DEF, 50)   // C + ,
+ZMK_COMBO(combo_vim_sv,  &vim_sv,     RB1 RB2 RB3, DEF, 60)   // M + , + .
 
-    keymap {
-        compatible = "zmk,keymap";
+/* ╭─────────────────────────────────────────────────────────────────────╮
+ * │                              BASE                                   │
+ * │  Q       W       E       R       T       Y       U       I       O       P │
+ * │  A/GUI   S/ALT   D/CTL   F/SFT   G       H       J/SFT   K/CTL   L/ALT   '/GUI │
+ * │  Z       X       C       V       B       N       M       ,(!)    .(?)   /(\) │
+ * │              NAV/SPC  NUM     HYPR    ─       FN/TAB  SYM/RET          │
+ * ╰─────────────────────────────────────────────────────────────────────╯
+ */
+ZMK_LAYER(base,
+    &kp Q        &kp W        &kp E        &kp R        &kp T              &kp Y        &kp U        &kp I         &kp O         &kp P
+    &hml LGUI A  &hml LALT S  &hml LCTRL D &hml LSHFT F &kp G              &kp H        &hmr LSHFT J &hmr LCTRL K  &hmr LALT L   &hmr LGUI SQT
+    &none &kp Z  &kp X        &kp C        &kp V        &kp B              &kp N        &kp M        &comma_morph  &dot_morph    &slash_morph &none
+                              &lt NAV SPACE &mo NUM     &mo HYPR           &none        &lt FN TAB   &lt SYM RET
+)
 
-// ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+ZMK_LAYER(nav,
+    &trans  &trans  &trans  &trans  &trans              &kp HOME  &kp BSPC  &kp DEL  &kp END   &kp PG_DN
+    &trans  &trans  &trans  &trans  &trans              &kp LEFT  &kp DOWN  &kp UP   &kp RIGHT &kp PG_UP
+    &trans &trans  &trans  &trans  &trans  &trans       &trans    &kp INS   &kp TAB  &trans    &trans  &trans
+                    &trans  &trans  &trans              &trans    &trans    &trans
+)
 
-        base_layer {
-// ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-display-name= "BASE"                              ;
-// ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-//             ┏━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓   ┏━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓
-//             ┃     Q     ┃     W     ┃     E     ┃     R     ┃     T     ┃   ┃     Y     ┃     U     ┃     I     ┃     O     ┃     P     ┃
-//             ┣━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫   ┣━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫
-//             ┃   GUI/A   ┃   ALT/S   ┃   CTL/D   ┃   SFT/F   ┃     G     ┃   ┃     H     ┃   SFT/J   ┃   CTL/K   ┃   ALT/L   ┃   GUI/'   ┃
-//             ┣━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫   ┣━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫
-// ┏━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫   ┣━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┓
-// ┃           ┃     Z     ┃     X     ┃     C     ┃     V     ┃     B     ┃   ┃     N     ┃     M     ┃  , (!)    ┃  . (?)    ┃  / (\)    ┃           ┃
-// ┗━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫   ┣━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━┛
-//                                     ┃  NAV/SPC  ┃    NUM    ┃   HYPR    ┃   ┃           ┃  FN/TAB   ┃  SYM/RET  ┃
-//                                     ┗━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━┛   ┗━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━┛
- bindings = <
-// ╷           ╷           ╷           ╷           ╷           ╷           ╷   ╷           ╷           ╷           ╷           ╷           ╷           ╷
+ZMK_LAYER(sym,
+    &kp GRAVE &kp LT    &kp GT    &kp MINUS &kp PIPE        &kp CARET &kp LBRC       &kp RBRC  &kp DLLR &trans
+    &kp EXCL  &kp ASTRK &kp FSLH  &kp EQUAL &kp AMPS        &kp HASH  &hmr LSHFT LPAR &kp RPAR &kp SEMI &kp DQT
+    &trans &kp TILDE &kp PLUS &kp LBKT &kp RBKT &kp PRCNT   &kp AT    &kp COLON      &kp COMMA &kp DOT  &kp SQT &trans
+                      &trans    &trans    &trans            &trans    &trans         &trans
+)
 
-                &kp Q       &kp W       &kp E       &kp R       &kp T           &kp Y       &kp U       &kp I        &kp O         &kp P
-                &mt LGUI A  &mt LALT S  &mt LCTRL D &mt LSHFT F &kp G           &kp H       &mt LSHFT J &mt LCTRL K  &mt LALT L    &mt LGUI SQT
-    &none       &kp Z       &kp X       &kp C       &kp V       &kp B           &kp N       &kp M       &comma_morph &dot_morph    &slash_morph  &none
-                                        &lt NAV SPACE &mo NUM   &mo HYPR        &none       &lt FN TAB  &lt SYM RET
-                        >;
-        };
+ZMK_LAYER(num,
+    &bootloader &trans  &trans  &trans  &trans             &trans  &kp N7       &kp N8        &kp N9       &trans
+    &trans      &trans  &trans  &trans  &trans             &trans  &mt RSHFT N4 &mt RCTRL N5  &mt RALT N6  &trans
+    &trans &trans  &trans  &trans  &trans  &trans          &trans  &kp N1       &kp N2        &kp N3       &trans &trans
+                        &trans  &trans  &trans             &trans  &trans       &kp N0
+)
 
-// ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
+ZMK_LAYER(fn,
+    &kp F12 &kp F7  &kp F8  &kp F9  &trans                 &trans     &kp C_VOL_DN     &kp C_VOL_UP      &trans           &trans
+    &kp F11 &kp F4  &kp F5  &kp F6  &trans                 &kp C_PREV &mt RSHFT C_PP   &mt RCTRL C_MUTE  &mt RALT C_NEXT  &trans
+    &trans &kp F10 &kp F1  &kp F2  &kp F3  &trans          &trans     &trans           &trans            &trans           &trans &trans
+                    &trans  &trans  &trans                 &trans     &trans           &trans
+)
 
-        nav_layer {
-// ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-display-name= "NAV"                               ;
-// ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-//             ┏━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓   ┏━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓
-//             ┃           ┃           ┃           ┃           ┃           ┃   ┃   HOME    ┃   BSPC    ┃    DEL    ┃    END    ┃   PGDN    ┃
-//             ┣━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫   ┣━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫
-//             ┃           ┃           ┃           ┃           ┃           ┃   ┃   LEFT    ┃   DOWN    ┃    UP     ┃   RIGHT   ┃   PGUP    ┃
-// ┏━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫   ┣━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┓
-// ┃           ┃           ┃           ┃           ┃           ┃           ┃   ┃           ┃    INS    ┃    TAB    ┃           ┃           ┃           ┃
-// ┗━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫   ┣━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━┛
-//                                     ┃           ┃           ┃           ┃   ┃           ┃           ┃           ┃
-//                                     ┗━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━┛   ┗━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━┛
- bindings = <
-// ╷           ╷           ╷           ╷           ╷           ╷           ╷   ╷           ╷           ╷           ╷           ╷           ╷           ╷
-
-                &trans      &trans      &trans      &trans      &trans          &kp HOME    &kp BSPC    &kp DEL     &kp END     &kp PG_DN
-                &trans      &trans      &trans      &trans      &trans          &kp LEFT    &kp DOWN    &kp UP      &kp RIGHT   &kp PG_UP
-    &trans      &trans      &trans      &trans      &trans      &trans          &trans      &kp INS     &kp TAB     &trans      &trans      &trans
-                                        &trans      &trans      &trans          &trans      &trans      &trans
-                        >;
-        };
-
-// ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
-
-        sym_layer {
-// ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-display-name= "SYM"                               ;
-// ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-//             ┏━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓   ┏━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓
-//             ┃     `     ┃     <     ┃     >     ┃     -     ┃     |     ┃   ┃     ^     ┃     {     ┃     }     ┃     $     ┃           ┃
-//             ┣━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫   ┣━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫
-//             ┃     !     ┃     *     ┃     /     ┃     =     ┃     &     ┃   ┃     #     ┃  SFT/ (   ┃     )     ┃     ;     ┃     "     ┃
-// ┏━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫   ┣━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┓
-// ┃           ┃     ~     ┃     +     ┃     [     ┃     ]     ┃     %     ┃   ┃     @     ┃     :     ┃     ,     ┃     .     ┃     '     ┃           ┃
-// ┗━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫   ┣━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━┛
-//                                     ┃           ┃           ┃           ┃   ┃           ┃           ┃           ┃
-//                                     ┗━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━┛   ┗━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━┛
- bindings = <
-// ╷           ╷           ╷           ╷           ╷           ╷           ╷   ╷           ╷           ╷           ╷           ╷           ╷           ╷
-
-                &kp GRAVE   &kp LT      &kp GT      &kp MINUS   &kp PIPE        &kp CARET   &kp LBRC        &kp RBRC    &kp DLLR    &trans
-                &kp EXCL    &kp ASTRK   &kp FSLH    &kp EQUAL   &kp AMPS        &kp HASH    &mt LSHFT LPAR  &kp RPAR    &kp SEMI    &kp DQT
-    &trans      &kp TILDE   &kp PLUS    &kp LBKT    &kp RBKT    &kp PRCNT       &kp AT      &kp COLON       &kp COMMA   &kp DOT     &kp SQT     &trans
-                                        &trans      &trans      &trans          &trans      &trans          &trans
-                        >;
-        };
-
-// ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
-
-        num_layer {
-// ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-display-name= "NUM"                               ;
-// ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-//             ┏━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓   ┏━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓
-//             ┃   BOOT    ┃           ┃           ┃           ┃           ┃   ┃           ┃     7     ┃     8     ┃     9     ┃           ┃
-//             ┣━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫   ┣━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫
-//             ┃           ┃           ┃           ┃           ┃           ┃   ┃           ┃   SFT/4   ┃   CTL/5   ┃   ALT/6   ┃           ┃
-// ┏━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫   ┣━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┓
-// ┃           ┃           ┃           ┃           ┃           ┃           ┃   ┃           ┃     1     ┃     2     ┃     3     ┃           ┃           ┃
-// ┗━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫   ┣━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━┛
-//                                     ┃           ┃           ┃           ┃   ┃           ┃           ┃     0     ┃
-//                                     ┗━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━┛   ┗━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━┛
- bindings = <
-// ╷           ╷           ╷           ╷           ╷           ╷           ╷   ╷           ╷           ╷           ╷           ╷           ╷           ╷
-
-                &bootloader &trans      &trans      &trans      &trans          &trans      &kp N7          &kp N8        &kp N9        &trans
-                &trans      &trans      &trans      &trans      &trans          &trans      &mt RSHFT N4    &mt RCTRL N5  &mt RALT N6   &trans
-    &trans      &trans      &trans      &trans      &trans      &trans          &trans      &kp N1          &kp N2        &kp N3        &trans      &trans
-                                        &trans      &trans      &trans          &trans      &trans          &kp N0
-                        >;
-        };
-
-// ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
-
-        fn_layer {
-// ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-display-name= "FN"                                ;
-// ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-//             ┏━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓   ┏━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓
-//             ┃    F12    ┃    F7     ┃    F8     ┃    F9     ┃           ┃   ┃           ┃   VOL-    ┃   VOL+    ┃           ┃           ┃
-//             ┣━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫   ┣━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫
-//             ┃    F11    ┃    F4     ┃    F5     ┃    F6     ┃           ┃   ┃   PREV    ┃  SFT/PP   ┃  CTL/MUT  ┃  ALT/NXT  ┃           ┃
-// ┏━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫   ┣━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┓
-// ┃           ┃    F10    ┃    F1     ┃    F2     ┃    F3     ┃           ┃   ┃           ┃           ┃           ┃           ┃           ┃           ┃
-// ┗━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫   ┣━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━┛
-//                                     ┃           ┃           ┃           ┃   ┃           ┃           ┃           ┃
-//                                     ┗━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━┛   ┗━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━┛
- bindings = <
-// ╷           ╷           ╷           ╷           ╷           ╷           ╷   ╷           ╷           ╷           ╷           ╷           ╷           ╷
-
-                &kp F12     &kp F7      &kp F8      &kp F9      &trans          &trans      &kp C_VOL_DN     &kp C_VOL_UP     &trans           &trans
-                &kp F11     &kp F4      &kp F5      &kp F6      &trans          &kp C_PREV  &mt RSHFT C_PP   &mt RCTRL C_MUTE &mt RALT C_NEXT  &trans
-    &trans      &kp F10     &kp F1      &kp F2      &kp F3      &trans          &trans      &trans           &trans           &trans           &trans          &trans
-                                        &trans      &trans      &trans          &trans      &trans           &trans
-                        >;
-        };
-
-// ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
-
-        // QMK's LM(HYPR, LGUI) combined a layer with a held modifier. ZMK has no direct
-        // equivalent, so each key on this layer bakes LGUI into its output and the thumb
-        // just toggles the layer with &mo HYPR.
-        hypr_layer {
-// ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-display-name= "HYPR"                              ;
-// ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-//             ┏━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓   ┏━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━┓
-//             ┃           ┃           ┃           ┃           ┃           ┃   ┃           ┃   G+7     ┃   G+8     ┃   G+9     ┃           ┃
-//             ┣━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫   ┣━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫
-//             ┃           ┃           ┃           ┃           ┃           ┃   ┃   G+0     ┃   G+4     ┃   G+5     ┃   G+6     ┃           ┃
-// ┏━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫   ┣━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┓
-// ┃           ┃           ┃           ┃           ┃           ┃           ┃   ┃           ┃   G+1     ┃   G+2     ┃   G+3     ┃           ┃           ┃
-// ┗━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┫   ┣━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━╋━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━┛
-//                                     ┃           ┃           ┃           ┃   ┃           ┃           ┃           ┃
-//                                     ┗━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━┛   ┗━━━━━━━━━━━┻━━━━━━━━━━━┻━━━━━━━━━━━┛
- bindings = <
-// ╷           ╷           ╷           ╷           ╷           ╷           ╷   ╷           ╷           ╷           ╷           ╷           ╷           ╷
-
-                &trans      &trans      &trans      &trans      &trans          &trans       &kp LG(N7)  &kp LG(N8)  &kp LG(N9)  &trans
-                &trans      &trans      &trans      &trans      &trans          &kp LG(N0)   &kp LG(N4)  &kp LG(N5)  &kp LG(N6)  &trans
-    &trans      &trans      &trans      &trans      &trans      &trans          &trans       &kp LG(N1)  &kp LG(N2)  &kp LG(N3)  &trans      &trans
-                                        &trans      &trans      &trans          &trans       &trans      &trans
-                        >;
-        };
-    };
-};
+/* QMK's LM(HYPR, LGUI) held LGUI while on the layer; ZMK has no direct equivalent,
+   so each key bakes LGUI in. */
+ZMK_LAYER(hypr,
+    &trans  &trans  &trans  &trans  &trans              &trans       &kp LG(N7)  &kp LG(N8)  &kp LG(N9)  &trans
+    &trans  &trans  &trans  &trans  &trans              &kp LG(N0)   &kp LG(N4)  &kp LG(N5)  &kp LG(N6)  &trans
+    &trans &trans  &trans  &trans  &trans  &trans       &trans       &kp LG(N1)  &kp LG(N2)  &kp LG(N3)  &trans &trans
+                    &trans  &trans  &trans              &trans       &trans      &trans
+)
