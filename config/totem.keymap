@@ -96,8 +96,6 @@ ZMK_MOD_MORPH(magic_shift_tap,
    Bottom row: LB5=20 LB4=21(Z) LB3=22(X) LB2=23(C) LB1=24(V) LB0=25(B)
                RB0=26(N) RB1=27(M) RB2=28(,) RB3=29(.) RB4=30(/) RB5=31 */
 ZMK_COMBO(combo_esc,     &kp ESC,     LB2 LB1,     DEF, 40)   // C + V
-ZMK_COMBO(combo_bspc,    &kp BSPC,    RT1 RT2,     DEF, 40)   // U + I
-ZMK_COMBO(combo_del,     &kp DEL,     RT2 RT3,     DEF, 40)   // I + O
 ZMK_COMBO(combo_caps,    &caps_word,  LB2 RB2,     DEF, 50)   // C + ,
 ZMK_COMBO(combo_vim_sv,  &vim_sv,     RB1 RB2 RB3, DEF, 60)   // M + , + .
 
@@ -110,7 +108,7 @@ ZMK_LAYER(base,
 //╭─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────╮
     &none         &kp Z         &kp X         &kp C         &kp V         &kp B           &kp N         &kp M         &comma_morph  &dot_morph    &slash_morph  &none
 //╰─────────────┴─────────────┴─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┴─────────────┴─────────────┴─────────────╯
-                                              &lt NAV SPACE &mo NUM       &mo HYPR        MAGIC_SHIFT   &lt FN TAB    &lt SYM RET
+                                              &lt NUM BSPC  &lt NAV SPACE &lt HYPR DEL    &lt SYM TAB   MAGIC_SHIFT   &lt FN RET
 //                                          ╰─────────────┴─────────────┴─────────────╯ ╰─────────────┴─────────────┴─────────────╯
 )
 
