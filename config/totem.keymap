@@ -21,6 +21,8 @@
 
 #define QUICK_TAP_MS 175
 
+#define ___ &trans
+
 /* Positional homerow mods — urob parity. */
 #define MAKE_HRM(NAME, HOLD, TAP, TRIGGER_POS) \
     ZMK_HOLD_TAP(NAME, \
@@ -55,6 +57,35 @@ ZMK_MACRO(vim_sv,
     bindings = <&kp ESC>, <&kp COLON>, <&kp W>, <&kp RET>;
 )
 
+/* Magic shift — right inner thumb (RH0).
+ *   Hold                       → LSHFT (no require-prior-idle-ms)
+ *   Tap                        → &sk LSHFT (one-shot)
+ *   Shift + tap / double-tap   → caps_word
+ *
+ * urob's upstream version also routes "tap-after-alpha → &key_repeat" via
+ * &adaptive_key, which is a urob-fork extension not present in upstream v0.3.
+ */
+ZMK_HOLD_TAP(magic_shift,
+    bindings = <&kp>, <&magic_shift_tap>;
+    flavor = "balanced";
+    tapping-term-ms = <200>;
+    quick-tap-ms = <QUICK_TAP_MS>;
+)
+ZMK_MOD_MORPH(magic_shift_tap,
+    bindings = <&sk LSHFT>, <&caps_word>;
+    mods = <(MOD_LSFT)>;
+)
+#define MAGIC_SHIFT &magic_shift LSHFT 0
+
+/* Short aliases so long compound bindings fit in 13-char cells. */
+#define SFT_LPAR  &hmr LSHFT LPAR    // sym
+#define SFT_PP    &mt RSHFT C_PP     // fn
+#define CTL_MUTE  &mt RCTRL C_MUTE   // fn
+#define ALT_NEXT  &mt RALT C_NEXT    // fn
+#define SFT_N4    &mt RSHFT N4       // num
+#define CTL_N5    &mt RCTRL N5       // num
+#define ALT_N6    &mt RALT N6        // num
+
 /* Combos — positions resolved via key-labels/totem.h.
    Signature: ZMK_COMBO(name, bindings, key-positions, layers, timeout)
    Bottom row: LB5=20 LB4=21(Z) LB3=22(X) LB2=23(C) LB1=24(V) LB0=25(B)
@@ -65,54 +96,77 @@ ZMK_COMBO(combo_del,     &kp DEL,     RT2 RT3,     DEF, 40)   // I + O
 ZMK_COMBO(combo_caps,    &caps_word,  LB2 RB2,     DEF, 50)   // C + ,
 ZMK_COMBO(combo_vim_sv,  &vim_sv,     RB1 RB2 RB3, DEF, 60)   // M + , + .
 
-/* ╭─────────────────────────────────────────────────────────────────────╮
- * │                              BASE                                   │
- * │  Q       W       E       R       T       Y       U       I       O       P │
- * │  A/GUI   S/ALT   D/CTL   F/SFT   G       H       J/SFT   K/CTL   L/ALT   '/GUI │
- * │  Z       X       C       V       B       N       M       ,(!)    .(?)   /(\) │
- * │              NAV/SPC  NUM     HYPR    ─       FN/TAB  SYM/RET          │
- * ╰─────────────────────────────────────────────────────────────────────╯
- */
+
 ZMK_LAYER(base,
-    &kp Q        &kp W        &kp E        &kp R        &kp T              &kp Y        &kp U        &kp I         &kp O         &kp P
-    &hml LGUI A  &hml LALT S  &hml LCTRL D &hml LSHFT F &kp G              &kp H        &hmr LSHFT J &hmr LCTRL K  &hmr LALT L   &hmr LGUI SQT
-    &none &kp Z  &kp X        &kp C        &kp V        &kp B              &kp N        &kp M        &comma_morph  &dot_morph    &slash_morph &none
-                              &lt NAV SPACE &mo NUM     &mo HYPR           &none        &lt FN TAB   &lt SYM RET
+//              ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮ ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
+                  &kp Q         &kp W         &kp E         &kp R         &kp T           &kp Y         &kp U         &kp I         &kp O         &kp P
+//              ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
+                  &hml LGUI A   &hml LALT S   &hml LCTRL D  &hml LSHFT F  &kp G           &kp H         &hmr LSHFT J  &hmr LCTRL K  &hmr LALT L   &hmr LGUI SQT
+//╭─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────╮
+    &none         &kp Z         &kp X         &kp C         &kp V         &kp B           &kp N         &kp M         &comma_morph  &dot_morph    &slash_morph  &none
+//╰─────────────┴─────────────┴─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┴─────────────┴─────────────┴─────────────╯
+                                              &lt NAV SPACE &mo NUM       &mo HYPR        MAGIC_SHIFT   &lt FN TAB    &lt SYM RET
+//                                          ╰─────────────┴─────────────┴─────────────╯ ╰─────────────┴─────────────┴─────────────╯
 )
 
 ZMK_LAYER(nav,
-    &trans  &trans  &trans  &trans  &trans              &kp HOME  &kp BSPC  &kp DEL  &kp END   &kp PG_DN
-    &trans  &trans  &trans  &trans  &trans              &kp LEFT  &kp DOWN  &kp UP   &kp RIGHT &kp PG_UP
-    &trans &trans  &trans  &trans  &trans  &trans       &trans    &kp INS   &kp TAB  &trans    &trans  &trans
-                    &trans  &trans  &trans              &trans    &trans    &trans
+//              ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮ ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
+                  ___           ___           ___           ___           ___             &kp HOME      &kp BSPC      &kp DEL       &kp END       &kp PG_DN
+//              ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
+                  ___           ___           ___           ___           ___             &kp LEFT      &kp DOWN      &kp UP        &kp RIGHT     &kp PG_UP
+//╭─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────╮
+    ___           ___           ___           ___           ___           ___             ___           &kp INS       &kp TAB       ___           ___           ___
+//╰─────────────┴─────────────┴─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┴─────────────┴─────────────┴─────────────╯
+                                              ___           ___           ___             ___           ___           ___
+//                                          ╰─────────────┴─────────────┴─────────────╯ ╰─────────────┴─────────────┴─────────────╯
 )
 
 ZMK_LAYER(sym,
-    &kp GRAVE &kp LT    &kp GT    &kp MINUS &kp PIPE        &kp CARET &kp LBRC       &kp RBRC  &kp DLLR &trans
-    &kp EXCL  &kp ASTRK &kp FSLH  &kp EQUAL &kp AMPS        &kp HASH  &hmr LSHFT LPAR &kp RPAR &kp SEMI &kp DQT
-    &trans &kp TILDE &kp PLUS &kp LBKT &kp RBKT &kp PRCNT   &kp AT    &kp COLON      &kp COMMA &kp DOT  &kp SQT &trans
-                      &trans    &trans    &trans            &trans    &trans         &trans
+//              ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮ ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
+                  &kp GRAVE     &kp LT        &kp GT        &kp MINUS     &kp PIPE        &kp CARET     &kp LBRC      &kp RBRC      &kp DLLR      ___
+//              ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
+                  &kp EXCL      &kp ASTRK     &kp FSLH      &kp EQUAL     &kp AMPS        &kp HASH      SFT_LPAR      &kp RPAR      &kp SEMI      &kp DQT
+//╭─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────╮
+    ___           &kp TILDE     &kp PLUS      &kp LBKT      &kp RBKT      &kp PRCNT       &kp AT        &kp COLON     &kp COMMA     &kp DOT       &kp SQT       ___
+//╰─────────────┴─────────────┴─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┴─────────────┴─────────────┴─────────────╯
+                                              ___           ___           ___             ___           ___           ___
+//                                          ╰─────────────┴─────────────┴─────────────╯ ╰─────────────┴─────────────┴─────────────╯
 )
 
 ZMK_LAYER(num,
-    &bootloader &trans  &trans  &trans  &trans             &trans  &kp N7       &kp N8        &kp N9       &trans
-    &trans      &trans  &trans  &trans  &trans             &trans  &mt RSHFT N4 &mt RCTRL N5  &mt RALT N6  &trans
-    &trans &trans  &trans  &trans  &trans  &trans          &trans  &kp N1       &kp N2        &kp N3       &trans &trans
-                        &trans  &trans  &trans             &trans  &trans       &kp N0
+//              ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮ ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
+                  &bootloader   ___           ___           ___           ___             ___           &kp N7        &kp N8        &kp N9        ___
+//              ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
+                  ___           ___           ___           ___           ___             ___           SFT_N4        CTL_N5        ALT_N6        ___
+//╭─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────╮
+    ___           ___           ___           ___           ___           ___             ___           &kp N1        &kp N2        &kp N3        ___           ___
+//╰─────────────┴─────────────┴─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┴─────────────┴─────────────┴─────────────╯
+                                              ___           ___           ___             ___           ___           &kp N0
+//                                          ╰─────────────┴─────────────┴─────────────╯ ╰─────────────┴─────────────┴─────────────╯
 )
 
 ZMK_LAYER(fn,
-    &kp F12 &kp F7  &kp F8  &kp F9  &trans                 &trans     &kp C_VOL_DN     &kp C_VOL_UP      &trans           &trans
-    &kp F11 &kp F4  &kp F5  &kp F6  &trans                 &kp C_PREV &mt RSHFT C_PP   &mt RCTRL C_MUTE  &mt RALT C_NEXT  &trans
-    &trans &kp F10 &kp F1  &kp F2  &kp F3  &trans          &trans     &trans           &trans            &trans           &trans &trans
-                    &trans  &trans  &trans                 &trans     &trans           &trans
+//              ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮ ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
+                  &kp F12       &kp F7        &kp F8        &kp F9        ___             ___           &kp C_VOL_DN  &kp C_VOL_UP  ___           ___
+//              ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
+                  &kp F11       &kp F4        &kp F5        &kp F6        ___             &kp C_PREV    SFT_PP        CTL_MUTE      ALT_NEXT      ___
+//╭─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────╮
+    ___           &kp F10       &kp F1        &kp F2        &kp F3        ___             ___           ___           ___           ___           ___           ___
+//╰─────────────┴─────────────┴─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┴─────────────┴─────────────┴─────────────╯
+                                              ___           ___           ___             ___           ___           ___
+//                                          ╰─────────────┴─────────────┴─────────────╯ ╰─────────────┴─────────────┴─────────────╯
 )
 
-/* QMK's LM(HYPR, LGUI) held LGUI while on the layer; ZMK has no direct equivalent,
-   so each key bakes LGUI in. */
+/* QMK's LM(HYPR, LGUI) held LGUI while on the layer; ZMK has no direct
+   equivalent, so each key bakes LGUI in. */
 ZMK_LAYER(hypr,
-    &trans  &trans  &trans  &trans  &trans              &trans       &kp LG(N7)  &kp LG(N8)  &kp LG(N9)  &trans
-    &trans  &trans  &trans  &trans  &trans              &kp LG(N0)   &kp LG(N4)  &kp LG(N5)  &kp LG(N6)  &trans
-    &trans &trans  &trans  &trans  &trans  &trans       &trans       &kp LG(N1)  &kp LG(N2)  &kp LG(N3)  &trans &trans
-                    &trans  &trans  &trans              &trans       &trans      &trans
+//              ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮ ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
+                  ___           ___           ___           ___           ___             ___           &kp LG(N7)    &kp LG(N8)    &kp LG(N9)    ___
+//              ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
+                  ___           ___           ___           ___           ___             &kp LG(N0)    &kp LG(N4)    &kp LG(N5)    &kp LG(N6)    ___
+//╭─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────╮
+    ___           ___           ___           ___           ___           ___             ___           &kp LG(N1)    &kp LG(N2)    &kp LG(N3)    ___           ___
+//╰─────────────┴─────────────┴─────────────┼─────────────┼─────────────┼─────────────┤ ├─────────────┼─────────────┼─────────────┴─────────────┴─────────────┴─────────────╯
+                                              ___           ___           ___             ___           ___           ___
+//                                          ╰─────────────┴─────────────┴─────────────╯ ╰─────────────┴─────────────┴─────────────╯
 )
