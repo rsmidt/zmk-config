@@ -23,6 +23,11 @@
 
 #define ___ &trans
 
+&sk {
+  release-after-ms = <900>;
+  quick-release; // As soon as a key is pressed after sticky, release the sticky to avoid multiple keys getting, e.g., capitalized.
+};
+
 /* Positional homerow mods — urob parity. */
 #define MAKE_HRM(NAME, HOLD, TAP, TRIGGER_POS) \
     ZMK_HOLD_TAP(NAME, \
