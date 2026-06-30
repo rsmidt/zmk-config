@@ -1,6 +1,5 @@
-// Cygnus keymap — ported from the totem keymap (config/totem.keymap).
-// Cygnus is a 36-key (3x5 + 3 thumbs) split; vs totem it drops the bottom-row
-// outer pinky on each half, so this uses the generic 36-key position labels.
+// Cygnus keymap — a 36-key (3x5 + 3 thumbs) split using the generic 36-key
+// position labels.
 //
 // Layer content is a port of the cosmotyl QMK default keymap:
 // qmk_firmware/keyboards/handwired/cosmotyl/keymaps/default/keymap.c

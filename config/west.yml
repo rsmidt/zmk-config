@@ -1,22 +1,16 @@
 manifest:
-  defaults:
-    revision: v0.3
   remotes:
     - name: zmkfirmware
       url-base: https://github.com/zmkfirmware
-    - name: bildermankawasaki
-      url-base: https://github.com/bildermankawasaki
     - name: urob
       url-base: https://github.com/urob
   projects:
     - name: zmk
       remote: zmkfirmware
+      revision: 484a0547078228f6957ed164523823e39fbedec4   # main @ 2026-06-29 (Zephyr 4.1)
       import: app/west.yml
-    - name: zmk-keyboard-totem
-      remote: bildermankawasaki
-      revision: main
     - name: zmk-helpers
       remote: urob
-      revision: main
+      revision: bc114546392b4615ac90a99140eaf21dde31209d   # urob/zmk-helpers main @ 2026-05-21
   self:
     path: config
