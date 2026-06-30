@@ -4,6 +4,8 @@ manifest:
       url-base: https://github.com/zmkfirmware
     - name: urob
       url-base: https://github.com/urob
+    - name: carrefinho
+      url-base: https://github.com/carrefinho
   projects:
     - name: zmk
       remote: zmkfirmware
@@ -12,5 +14,8 @@ manifest:
     - name: zmk-helpers
       remote: urob
       revision: bc114546392b4615ac90a99140eaf21dde31209d   # urob/zmk-helpers main @ 2026-05-21
+    - name: prospector-zmk-module
+      remote: carrefinho
+      revision: ed98221f3b52b7066dbb10ba3af8a29150b93a5a   # feat/new-status-screens @ 2026-02-17
   self:
     path: config

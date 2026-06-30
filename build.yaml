@@ -19,7 +19,16 @@
 #
 ---
 include:
+  # Dongle = BLE central + Prospector status screen (no keys of its own).
+  - board: xiao_ble//zmk
+    shield: cygnus_dongle prospector_adapter
+  # Both halves become peripherals of the dongle.
   - board: xiao_ble//zmk
     shield: cygnus_left
+    cmake-args: -DCONFIG_ZMK_SPLIT=y -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=n
   - board: xiao_ble//zmk
     shield: cygnus_right
+    cmake-args: -DCONFIG_ZMK_SPLIT=y -DCONFIG_ZMK_SPLIT_ROLE_CENTRAL=n
+  # Flash to all three devices before flashing the above, so they re-pair.
+  - board: xiao_ble//zmk
+    shield: settings_reset
